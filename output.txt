@@ -1,0 +1,45 @@
+Test case 1:
+Available from 16:30 to 17:30
+
+Test case 2:
+Available from 12:30 to 13:00
+Available from 14:30 to 15:00
+Available from 17:30 to 18:00
+
+Test case 3:
+Available from 9:30 to 10:00
+Available from 11:30 to 12:30
+Available from 14:00 to 14:30
+Available from 16:00 to 17:00
+
+Test case 4:
+Available from 13:30 to 15:30
+Available from 16:30 to 17:30
+
+Test case 5:
+Available from 10:30 to 11:30
+Available from 12:30 to 13:00
+Available from 14:30 to 16:00
+
+Test case 6:
+Available from 11:30 to 13:00
+Available from 15:30 to 17:00
+
+Test case 7:
+Available from 14:00 to 15:00
+
+Test case 8:
+Available from 10:00 to 10:30
+Available from 11:30 to 12:00
+Available from 13:30 to 14:30
+Available from 15:30 to 16:00
+
+Test case 9:
+Available from 10:30 to 11:30
+Available from 13:00 to 15:30
+
+Test case 10:
+Available from 10:00 to 11:00
+Available from 12:30 to 13:00
+Available from 14:00 to 16:00
+

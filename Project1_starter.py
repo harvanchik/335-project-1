@@ -1,96 +1,93 @@
-import sys
 import ast
 
-def createWorkingSchedule (person1_busy_Schedule, person1_work_hours, person2_busy_Schedule, person2_work_hours, duration_of_meeting):
+def makeSchedule(person1_busy_Schedule, person1_work_hours, person2_busy_Schedule, person2_work_hours, duration_of_meeting):
+    updatePerson1 = fixSchedule(person1_busy_Schedule, person1_work_hours)
+    updatePerson2 = fixSchedule(person2_busy_Schedule, person2_work_hours)
+    mergedSchedule = combineSchedules(updatePerson1, updatePerson2)
+    sortedSchedulesResult = sortSchedules(mergedSchedule)
+    availabilities = matchedAvailabilities(sortedSchedulesResult, duration_of_meeting)
+    return availabilities
 
-    updatePerson1 = updateSchedule(person1_busy_Schedule, person1_work_hours)
-    updatePerson2 = updateSchedule(person2_busy_Schedule, person2_work_hours)
-    mergedSchedule = mergeSchedules(updatePerson1, updatePerson2)
-    sortedSchedules = sortedSchedules(mergedSchedule)
-    print (matchedAvailabilities(sortedSchedules,duration_of_meeting))
-
-def updateSchedule(Schedule, p1_work_hours):
-    updatedSchedule = Schedule[:]  
+def fixSchedule(Schedule, p1_work_hours):
+    updatedSchedule = Schedule[:]
     newWorkHours = p1_work_hours[:]
-
-    updatedSchedule = convert_to_data(updatedSchedule)
-    newWorkHours = convert_to_data(newWorkHours)
     
+    # Convert strings to lists of time intervals
+    updatedSchedule = convertStringToList(updatedSchedule)
+    newWorkHours = convertStringToList(newWorkHours)
+    
+    # Add the start and end of the workday
     updatedSchedule.insert(0, ['0:00', newWorkHours[0]])  
     updatedSchedule.append([newWorkHours[1], '23:59'])  
     return updatedSchedule
 
-def convert_to_data(schedule_string):
-    schedule = schedule_string[:]
-    schedule = schedule.replace('‘','\'')
-    schedule = schedule.replace('’','\'')  
-    schedule = ast.literal_eval(schedule)
-    return schedule
+def convertStringToList(schedule_string):
+    # If the input is already a list, return it
+    if isinstance(schedule_string, list):
+        return schedule_string
+    
+    # Replace invalid quotation marks and evaluate the string as a list
+    schedule_string = schedule_string.replace('‘', "'").replace('’', "'")
+    return ast.literal_eval(schedule_string)
 
-def mergeSchedules(person1_busy_Schedule, person2_busy_Schedule):
-    merged =[[0,0]]
-    i,j =0,0
+
+def combineSchedules(person1_busy_Schedule, person2_busy_Schedule):
+    merged = [[0,0]]
+    i, j = 0, 0
 
     person1_busy_ScheduleMinutes = convertListToMinutes(person1_busy_Schedule)
     person2_busy_ScheduleMinutes = convertListToMinutes(person2_busy_Schedule)
 
-    while i < len(person1_busy_ScheduleMinutes) and j< len(person2_busy_ScheduleMinutes):
-        meeting1, meeting2 =person1_busy_ScheduleMinutes[i], person2_busy_ScheduleMinutes[j]
-        if meeting1[0]<= meeting2[0]:
+    while i < len(person1_busy_ScheduleMinutes) and j < len(person2_busy_ScheduleMinutes):
+        meeting1, meeting2 = person1_busy_ScheduleMinutes[i], person2_busy_ScheduleMinutes[j]
+        if meeting1[0] <= meeting2[0]:
             if meeting1[1] > merged[-1][1]:
                 merged.append(meeting1)
-            i+=1
+            i += 1
         else:
             if meeting2[1] > merged[-1][1]:
                 merged.append(meeting2)
-            j+=1
-    while i< len(person1_busy_ScheduleMinutes):
+            j += 1
+    while i < len(person1_busy_ScheduleMinutes):
         meeting1 = person1_busy_ScheduleMinutes[i]
         if meeting1[1] > merged[-1][1]:
             merged.append(meeting1)
-        i+=1
-    while j< len(person2_busy_ScheduleMinutes):
+        i += 1
+    while j < len(person2_busy_ScheduleMinutes):
         meeting2 = person2_busy_ScheduleMinutes[j]
         if meeting2[1] > merged[-1][1]:
             merged.append(meeting2)
-        j+=1
+        j += 1
     return merged
 
-def sortedSchedules (Schedule):
-    '''finds all of the possible availabilities in the schedules'''
+def sortSchedules(Schedule):
     possibleAvailabilities = []
     index = 0
     while index < (len(Schedule) - 1):
         if Schedule[index][1] < Schedule[index + 1][0]:
             possibleAvailabilities.append([Schedule[index][1], Schedule[index + 1][0]])
-            index+=1
-        else:
-            index+=1
+        index += 1
     return possibleAvailabilities
 
-    
 def matchedAvailabilities(Schedule, duration_of_meeting):
-    availabilities=[]
+    availabilities = []
     for possible_availability in Schedule:
         if possible_availability[1] - possible_availability[0] >= int(duration_of_meeting):
             availabilities.append(possible_availability)
-
-    availabilities_reconverted =  []
-    for plan in availabilities:
-        hoursPlan = []
-        for bound in plan:
-            hoursPlan.append(minToHour(bound))
-        availabilities_reconverted.append(hoursPlan)
-
-    return availabilities_reconverted
+    return availabilities
 
 def convertToMinutes(time):
-    hours, minutes = list(map(int, time.split(":")))
+    if ':' not in str(time):
+        return 0
+
+    hours, minutes = time.split(':')
+    hours = int(hours)
+    minutes = int(minutes)
+
     return hours * 60 + minutes
 
 def convertListToMinutes(schedule_list):
-    '''converts a 2d list of a time schedule into minutes'''
-    scheduleMinutes = [] 
+    scheduleMinutes = []
     for plan in schedule_list:
         minutesPlan = []
         for bound in plan:
@@ -98,20 +95,39 @@ def convertListToMinutes(schedule_list):
         scheduleMinutes.append(minutesPlan)
     return scheduleMinutes
 
-def minToHour(minutes):
+def minutesToHours(minutes):
     hours = minutes // 60
-    mins = minutes% 60
+    mins = minutes % 60
     toString = str(hours)
-    toStringMins = "0" + str(mins) if mins< 10 else str(mins)
-    return toString +":" + toStringMins
+    toStringMins = "0" + str(mins) if mins < 10 else str(mins)
+    return toString + ":" + toStringMins
 
 def main():
-    person1_busy_Schedule = input("Person 1 schedule: ")
-    person2_busy_Schedule = input("Person 2 schedule: ")
-    person1_work_hours = input("Person 1 availability: ")
-    person2_work_hours = input("Person 2 availability: ")
-    duration_of_meeting = input("Meeting duration: ")
-    whenToMeet = createWorkingSchedule(person1_busy_Schedule, person1_work_hours, person2_busy_Schedule, person2_work_hours,duration_of_meeting )
+    try:
+        with open('input.txt', 'r') as file:
+            lines = [line.strip() for line in file]
+
+        # Iterate over the list of lines and process each test case
+        for line_index in range(0, len(lines), 6):
+            # Extract the data for the current test case
+            person1_busy_Schedule = lines[line_index].replace("person1_busy_Schedule = ", "")
+            person1_work_hours = lines[line_index + 1].replace("person1_work_hours = ", "")
+            person2_busy_Schedule = lines[line_index + 2].replace("person2_busy_Schedule = ", "")
+            person2_work_hours = lines[line_index + 3].replace("person2_work_hours = ", "")
+            duration_of_meeting = lines[line_index + 4].replace("duration_of_meeting = ", "")
+
+            # Generate the availability schedule for the current test case
+            whenToMeet = makeSchedule(person1_busy_Schedule, person1_work_hours, person2_busy_Schedule, person2_work_hours, duration_of_meeting)
+
+            # Write the availability schedule for the current test case to the output file
+            with open('output.txt', 'a') as output_file:
+                output_file.write(f"Test case {line_index // 6 + 1}:\n")
+                for availability in whenToMeet:
+                    output_file.write(f"Available from {minutesToHours(availability[0])} to {minutesToHours(availability[1])}\n")
+                output_file.write("\n")
+
+    except Exception as e:
+        print(f"Error processing input file: {e}")
 
 if __name__ == '__main__':
     main()
